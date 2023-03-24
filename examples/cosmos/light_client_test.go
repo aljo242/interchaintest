@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"

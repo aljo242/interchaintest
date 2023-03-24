@@ -47,7 +47,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 )
 
 const (

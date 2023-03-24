@@ -12,14 +12,13 @@ require (
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.10
 	github.com/cosmos/cosmos-sdk v0.46.11
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go/v6 v6.0.0-20221104144119-b1f494c64328
+	github.com/cosmos/ibc-go/v5 v5.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/decred/dcrd/dcrec/secp256k1/v2 v2.0.0
 	github.com/docker/docker v20.10.19+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/google/go-cmp v0.5.9
-	github.com/hashicorp/go-version v1.6.0
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/libp2p/go-libp2p-core v0.20.1
 	github.com/mr-tron/base58 v1.2.0
@@ -65,7 +64,7 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-alpha7 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
@@ -113,6 +112,7 @@ require (
 	github.com/hashicorp/go-getter v1.6.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
+	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
@@ -225,7 +225,7 @@ replace (
 
 	//replace github.com/ComposableFi/go-substrate-rpc-client/v4 => ../../ComposableFi/go-substrate-rpc-client/
 
-	//replace github.com/cosmos/ibc-go/v6 => ../ibc-go_feat_wasm-client
+	//replace github.com/cosmos/ibc-go/v5 => ../ibc-go_feat_wasm-client
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 
