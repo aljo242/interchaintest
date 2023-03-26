@@ -9,7 +9,7 @@ require (
 	github.com/StirlingMarketingGroup/go-namecase v1.0.0
 	github.com/atotto/clipboard v0.1.4
 	github.com/avast/retry-go/v4 v4.3.3
-	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.10
+	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.12
 	github.com/cosmos/cosmos-sdk v0.46.11
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v5 v5.2.0
@@ -19,6 +19,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/google/go-cmp v0.5.9
+	github.com/hashicorp/go-version v1.6.0
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/libp2p/go-libp2p-core v0.20.1
 	github.com/mr-tron/base58 v1.2.0
@@ -112,7 +113,6 @@ require (
 	github.com/hashicorp/go-getter v1.6.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
-	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
