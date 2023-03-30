@@ -172,6 +172,9 @@ func (c *CosmosChain) Config() ibc.ChainConfig {
 
 // Implements Chain interface
 func (c *CosmosChain) Initialize(ctx context.Context, testName string, cli *client.Client, networkID string) error {
+	if err := c.initializeSidecars(ctx, testName, cli, networkID); err != nil {
+		return err
+	}
 	return c.initializeChainNodes(ctx, testName, cli, networkID)
 }
 
@@ -579,6 +582,18 @@ func (c *CosmosChain) NewChainNode(
 	}); err != nil {
 		return nil, fmt.Errorf("set volume owner: %w", err)
 	}
+
+	for _, cfg := range c.cfg.SidecarConfigs {
+		if !cfg.ValidatorProcess {
+			continue
+		}
+
+		err = tn.NewSidecarProcess(ctx, cfg.PreStart, cfg.ProcessName, testName, cli, networkID, cfg.Image, cfg.Ports, cfg.StartCmd)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return tn, nil
 }
 
@@ -594,7 +609,7 @@ func (c *CosmosChain) NewSidecarProcess(
 	index int,
 	ports []string,
 	startCmd []string,
-) (*SidecarProcess, error) {
+) error {
 	// Construct the SidecarProcess first so we can access its name.
 	// The SidecarProcess's VolumeName cannot be set until after we create the volume.
 	s := NewSidecar(c.log, false, preStart, c, cli, networkID, processName, testName, image, index, ports, startCmd)
@@ -606,7 +621,7 @@ func (c *CosmosChain) NewSidecarProcess(
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating volume for sidecar process: %w", err)
+		return fmt.Errorf("creating volume for sidecar process: %w", err)
 	}
 	s.VolumeName = v.Name
 
@@ -620,10 +635,12 @@ func (c *CosmosChain) NewSidecarProcess(
 		TestName:   testName,
 		UidGid:     image.UidGid,
 	}); err != nil {
-		return nil, fmt.Errorf("set volume owner: %w", err)
+		return fmt.Errorf("set volume owner: %w", err)
 	}
 
-	return s, nil
+	c.Sidecars = append(c.Sidecars, s)
+
+	return nil
 }
 
 // creates the test node objects required for bootstrapping tests
@@ -672,6 +689,37 @@ func (c *CosmosChain) initializeChainNodes(
 	defer c.findTxMu.Unlock()
 	c.Validators = newVals
 	c.FullNodes = newFullNodes
+	return nil
+}
+
+// initializeSidecars creates the sidecar processes that exist at the chain level.
+func (c *CosmosChain) initializeSidecars(
+	ctx context.Context,
+	testName string,
+	cli *client.Client,
+	networkID string,
+) error {
+	eg, egCtx := errgroup.WithContext(ctx)
+	for i, cfg := range c.cfg.SidecarConfigs {
+		i := i
+		cfg := cfg
+
+		if cfg.ValidatorProcess {
+			continue
+		}
+
+		eg.Go(func() error {
+			err := c.NewSidecarProcess(egCtx, cfg.PreStart, cfg.ProcessName, testName, cli, networkID, cfg.Image, i, cfg.Ports, cfg.StartCmd)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
+	}
+	if err := eg.Wait(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -849,7 +897,7 @@ func (c *CosmosChain) Start(testName string, ctx context.Context, additionalGene
 	for _, s := range c.Sidecars {
 		s := s
 
-		if s.preStart {
+		if s.preStart && !s.started {
 			eg.Go(func() error {
 				if err := s.CreateContainer(egCtx); err != nil {
 					return err
@@ -1035,6 +1083,11 @@ func (c *CosmosChain) StartAllSidecars(ctx context.Context) error {
 	var eg errgroup.Group
 	for _, s := range c.Sidecars {
 		s := s
+
+		if s.started {
+			continue
+		}
+
 		eg.Go(func() error {
 			if err := s.CreateContainer(ctx); err != nil {
 				return err
@@ -1042,6 +1095,34 @@ func (c *CosmosChain) StartAllSidecars(ctx context.Context) error {
 			return s.StartContainer(ctx)
 		})
 	}
+	return eg.Wait()
+}
+
+// StartAllValSidecars creates and starts new containers for each validator sidecar process.
+// Should only be used if the chain has previously been started with .Start.
+func (c *CosmosChain) StartAllValSidecars(ctx context.Context) error {
+	// prevent client calls during this time
+	c.findTxMu.Lock()
+	defer c.findTxMu.Unlock()
+	var eg errgroup.Group
+
+	for _, v := range c.Validators {
+		for _, s := range v.Sidecars {
+			s := s
+
+			if s.started {
+				continue
+			}
+
+			eg.Go(func() error {
+				if err := s.CreateContainer(ctx); err != nil {
+					return err
+				}
+				return s.StartContainer(ctx)
+			})
+		}
+	}
+
 	return eg.Wait()
 }
 
