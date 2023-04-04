@@ -153,8 +153,7 @@ func (tn *ChainNode) HostName() string {
 }
 
 func (tn *ChainNode) genesisFileContent(ctx context.Context) ([]byte, error) {
-	fr := dockerutil.NewFileRetriever(tn.logger(), tn.DockerClient, tn.TestName)
-	gen, err := fr.SingleFileContent(ctx, tn.VolumeName, "config/genesis.json")
+	gen, err := tn.ReadFile(ctx, "config/genesis.json")
 	if err != nil {
 		return nil, fmt.Errorf("getting genesis.json content: %w", err)
 	}
@@ -179,8 +178,7 @@ func (tn *ChainNode) copyGentx(ctx context.Context, destVal *ChainNode) error {
 
 	relPath := fmt.Sprintf("config/gentx/gentx-%s.json", nid)
 
-	fr := dockerutil.NewFileRetriever(tn.logger(), tn.DockerClient, tn.TestName)
-	gentx, err := fr.SingleFileContent(ctx, tn.VolumeName, relPath)
+	gentx, err := tn.ReadFile(ctx, relPath)
 	if err != nil {
 		return fmt.Errorf("getting gentx content: %w", err)
 	}
@@ -257,6 +255,14 @@ func (tn *ChainNode) SetTestConfig(ctx context.Context) error {
 
 	a := make(testutil.Toml)
 	a["minimum-gas-prices"] = tn.Chain.Config().GasPrices
+
+	grpc := make(testutil.Toml)
+
+	// Enable public GRPC
+	grpc["address"] = "0.0.0.0:9090"
+
+	a["grpc"] = grpc
+
 	return testutil.ModifyTomlConfigFile(
 		ctx,
 		tn.logger(),
@@ -539,6 +545,17 @@ func (tn *ChainNode) CopyFile(ctx context.Context, srcPath, dstPath string) erro
 	return tn.WriteFile(ctx, content, dstPath)
 }
 
+// ReadFile reads the contents of a single file at the specified path in the docker filesystem.
+// relPath describes the location of the file in the docker volume relative to the home directory.
+func (tn *ChainNode) ReadFile(ctx context.Context, relPath string) ([]byte, error) {
+	fr := dockerutil.NewFileRetriever(tn.logger(), tn.DockerClient, tn.TestName)
+	gen, err := fr.SingleFileContent(ctx, tn.VolumeName, relPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file at %s: %w", relPath, err)
+	}
+	return gen, nil
+}
+
 // CreateKey creates a key in the keyring backend test for the given node
 func (tn *ChainNode) CreateKey(ctx context.Context, name string) error {
 	tn.lock.Lock()
@@ -576,16 +593,21 @@ func (tn *ChainNode) AddGenesisAccount(ctx context.Context, address string, gene
 		}
 		amount += fmt.Sprintf("%d%s", coin.Amount.Int64(), coin.Denom)
 	}
-
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
-
 	// Adding a genesis account should complete instantly,
 	// so use a 1-minute timeout to more quickly detect if Docker has locked up.
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
-	_, _, err := tn.ExecBin(ctx, "add-genesis-account", address, amount)
+	var command []string
+	if tn.Chain.Config().UsingNewGenesisCommand {
+		command = append(command, "genesis")
+	}
+
+	command = append(command, "add-genesis-account", address, amount)
+	_, _, err := tn.ExecBin(ctx, command...)
+
 	return err
 }
 
@@ -594,19 +616,27 @@ func (tn *ChainNode) Gentx(ctx context.Context, name string, genesisSelfDelegati
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
 
-	_, _, err := tn.ExecBin(ctx,
-		"gentx", valKey, fmt.Sprintf("%d%s", genesisSelfDelegation.Amount.Int64(), genesisSelfDelegation.Denom),
+	var command []string
+	if tn.Chain.Config().UsingNewGenesisCommand {
+		command = append(command, "genesis")
+	}
+
+	command = append(command, "gentx", valKey, fmt.Sprintf("%d%s", genesisSelfDelegation.Amount.Int64(), genesisSelfDelegation.Denom),
 		"--keyring-backend", keyring.BackendTest,
-		"--chain-id", tn.Chain.Config().ChainID,
-	)
+		"--chain-id", tn.Chain.Config().ChainID)
+
+	_, _, err := tn.ExecBin(ctx, command...)
 	return err
 }
 
 // CollectGentxs runs collect gentxs on the node's home folders
 func (tn *ChainNode) CollectGentxs(ctx context.Context) error {
-	command := []string{tn.Chain.Config().Bin, "collect-gentxs",
-		"--home", tn.HomeDir(),
+	command := []string{tn.Chain.Config().Bin}
+	if tn.Chain.Config().UsingNewGenesisCommand {
+		command = append(command, "genesis")
 	}
+
+	command = append(command, "collect-gentxs", "--home", tn.HomeDir())
 
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
@@ -993,8 +1023,7 @@ func (tn *ChainNode) NodeID(ctx context.Context) (string, error) {
 	// but because we are transitioning to operating on Docker volumes,
 	// we only have to tmjson.Unmarshal the raw content.
 
-	fr := dockerutil.NewFileRetriever(tn.logger(), tn.DockerClient, tn.TestName)
-	j, err := fr.SingleFileContent(ctx, tn.VolumeName, "config/node_key.json")
+	j, err := tn.ReadFile(ctx, "config/node_key.json")
 	if err != nil {
 		return "", fmt.Errorf("getting node_key.json content: %w", err)
 	}

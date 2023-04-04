@@ -133,35 +133,47 @@ func TestChainSpec_Config(t *testing.T) {
 
 			require.Equal(t, m, cfg.NoHostMount)
 		})
-	})
 
-	t.Run("error cases", func(t *testing.T) {
-		t.Run("version required", func(t *testing.T) {
-			s := interchaintest.ChainSpec{
-				Name: "gaia",
-			}
+		t.Run("UsingNewGenesisCommand", func(t *testing.T) {
+			require.False(t, baseCfg.UsingNewGenesisCommand)
 
-			_, err := s.Config(zaptest.NewLogger(t))
-			require.EqualError(t, err, "ChainSpec.Version must not be empty")
+			s := baseSpec
+			s.UsingNewGenesisCommand = true
+
+			cfg, err := s.Config(zaptest.NewLogger(t))
+			require.NoError(t, err)
+
+			require.True(t, cfg.UsingNewGenesisCommand)
 		})
 
-		t.Run("name required", func(t *testing.T) {
-			s := interchaintest.ChainSpec{
-				Version: "v1.2.3",
-			}
+		t.Run("error cases", func(t *testing.T) {
+			t.Run("version required", func(t *testing.T) {
+				s := interchaintest.ChainSpec{
+					Name: "gaia",
+				}
 
-			_, err := s.Config(zaptest.NewLogger(t))
-			require.EqualError(t, err, "ChainSpec.Name required when not all config fields are set")
-		})
+				_, err := s.Config(zaptest.NewLogger(t))
+				require.EqualError(t, err, "ChainSpec.Version must not be empty")
+			})
 
-		t.Run("name invalid", func(t *testing.T) {
-			s := interchaintest.ChainSpec{
-				Name:    "invalid_chain",
-				Version: "v1.2.3",
-			}
+			t.Run("name required", func(t *testing.T) {
+				s := interchaintest.ChainSpec{
+					Version: "v1.2.3",
+				}
 
-			_, err := s.Config(zaptest.NewLogger(t))
-			require.ErrorContains(t, err, "no chain configuration for invalid_chain (available chains are:")
+				_, err := s.Config(zaptest.NewLogger(t))
+				require.EqualError(t, err, "ChainSpec.Name required when not all config fields are set")
+			})
+
+			t.Run("name invalid", func(t *testing.T) {
+				s := interchaintest.ChainSpec{
+					Name:    "invalid_chain",
+					Version: "v1.2.3",
+				}
+
+				_, err := s.Config(zaptest.NewLogger(t))
+				require.ErrorContains(t, err, "no chain configuration for invalid_chain (available chains are:")
+			})
 		})
 	})
 }

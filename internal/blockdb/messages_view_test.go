@@ -278,13 +278,13 @@ WHERE type = "/ibc.applications.transfer.v1.MsgTransfer" AND chain_id = ?
 		return
 	}
 
-	if !rf.Capabilities()[relayer.FlushPackets] {
-		t.Skip("cannot continue due to missing capability FlushPackets")
+	if !rf.Capabilities()[relayer.Flush] {
+		t.Skip("cannot continue due to missing capability Flush")
 	}
 
-	t.Run("relay packet", func(t *testing.T) {
-		require.NoError(t, r.FlushPackets(ctx, eRep, pathName, gaia0ChannelID))
-		require.NoError(t, testutil.WaitForBlocks(ctx, 2, gaia0))
+	t.Run("relay", func(t *testing.T) {
+		require.NoError(t, r.Flush(ctx, eRep, pathName, gaia0ChannelID))
+		require.NoError(t, testutil.WaitForBlocks(ctx, 5, gaia0))
 
 		const qMsgRecvPacket = `SELECT
 port_id, channel_id, counterparty_port_id, counterparty_channel_id
@@ -304,21 +304,23 @@ WHERE type = "/ibc.core.channel.v1.MsgRecvPacket" AND chain_id = ?
 		return
 	}
 
-	if !rf.Capabilities()[relayer.FlushAcknowledgements] {
-		t.Skip("cannot continue due to missing capability FlushAcknowledgements")
+	if !rf.Capabilities()[relayer.Flush] {
+		t.Skip("cannot continue due to missing capability Flush")
 	}
 
-	t.Run("relay acknowledgement", func(t *testing.T) {
-		require.NoError(t, r.FlushAcknowledgements(ctx, eRep, pathName, gaia0ChannelID))
-		require.NoError(t, testutil.WaitForBlocks(ctx, 2, gaia1))
+	t.Run("relay", func(t *testing.T) {
+		require.NoError(t, r.Flush(ctx, eRep, pathName, gaia0ChannelID))
+		require.NoError(t, testutil.WaitForBlocks(ctx, 5, gaia0))
 
-		const qMsgAck = `SELECT
+		const qMsgRecvPacket = `SELECT
 port_id, channel_id, counterparty_port_id, counterparty_channel_id
 FROM v_cosmos_messages
-WHERE type = "/ibc.core.channel.v1.MsgAcknowledgement" AND chain_id = ?
+WHERE type = "/ibc.core.channel.v1.MsgRecvPacket" AND chain_id = ?
 `
+
 		var portID, channelID, counterpartyPortID, counterpartyChannelID string
-		require.NoError(t, db.QueryRow(qMsgAck, gaia0ChainID).Scan(&portID, &channelID, &counterpartyPortID, &counterpartyChannelID))
+
+		require.NoError(t, db.QueryRow(qMsgRecvPacket, gaia1ChainID).Scan(&portID, &channelID, &counterpartyPortID, &counterpartyChannelID))
 
 		require.Equal(t, portID, gaia0Port)
 		require.Equal(t, channelID, gaia0ChannelID)
