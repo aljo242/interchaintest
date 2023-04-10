@@ -284,8 +284,10 @@ func (c *PenumbraChain) NewChainNode(
 		return PenumbraNode{}, fmt.Errorf("set tendermint volume owner: %w", err)
 	}
 
-	pn := &PenumbraAppNode{log: c.log, Index: i, Chain: c,
-		DockerClient: dockerClient, NetworkID: networkID, TestName: testName, Image: penumbraImage}
+	pn := &PenumbraAppNode{
+		log: c.log, Index: i, Chain: c,
+		DockerClient: dockerClient, NetworkID: networkID, TestName: testName, Image: penumbraImage,
+	}
 
 	pn.containerLifecycle = dockerutil.NewContainerLifecycle(c.log, dockerClient, pn.Name())
 

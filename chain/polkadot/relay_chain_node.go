@@ -52,7 +52,7 @@ type RelayChainNodes []*RelayChainNode
 
 const (
 	wsPort = "27451/tcp"
-	//rpcPort        = "27452/tcp"
+	// rpcPort        = "27452/tcp"
 	nodePort       = "27452/tcp"
 	rpcPort        = "9933/tcp"
 	prometheusPort = "27453/tcp"

@@ -13,7 +13,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-	//simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	// simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
 // Re-add once feat/wasm-client branch is on ibc-go v6
@@ -55,9 +55,9 @@ func TestPushWasmClientCode(t *testing.T) {
 	rpcOverrides["max_header_bytes"] = 1400000
 	configTomlOverrides["rpc"] = rpcOverrides
 
-	//mempoolOverrides := make(testutil.Toml)
-	//mempoolOverrides["max_tx_bytes"] = 6000000
-	//configTomlOverrides["mempool"] = mempoolOverrides
+	// mempoolOverrides := make(testutil.Toml)
+	// mempoolOverrides["max_tx_bytes"] = 6000000
+	// configTomlOverrides["mempool"] = mempoolOverrides
 
 	configFileOverrides["config/app.toml"] = appTomlOverrides
 	configFileOverrides["config/config.toml"] = configTomlOverrides
@@ -71,27 +71,28 @@ func TestPushWasmClientCode(t *testing.T) {
 				EncodingConfig: WasmClientEncoding(),
 			}
 		},*/
-		{ChainConfig: ibc.ChainConfig{
-			Type:    "cosmos",
-			Name:    "ibc-go-simd",
-			ChainID: "simd",
-			Images: []ibc.DockerImage{
-				{
-					Repository: "ibc-go-simd",
-					Version:    "feat-wasm-client",
-					UidGid:     "1025:1025",
+		{
+			ChainConfig: ibc.ChainConfig{
+				Type:    "cosmos",
+				Name:    "ibc-go-simd",
+				ChainID: "simd",
+				Images: []ibc.DockerImage{
+					{
+						Repository: "ibc-go-simd",
+						Version:    "feat-wasm-client",
+						UidGid:     "1025:1025",
+					},
 				},
+				Bin:            "simd",
+				Bech32Prefix:   "cosmos",
+				Denom:          "stake",
+				GasPrices:      "0.00stake",
+				GasAdjustment:  1.3,
+				TrustingPeriod: "504h",
+				// EncodingConfig: WasmClientEncoding(),
+				NoHostMount:         true,
+				ConfigFileOverrides: configFileOverrides,
 			},
-			Bin:            "simd",
-			Bech32Prefix:   "cosmos",
-			Denom:          "stake",
-			GasPrices:      "0.00stake",
-			GasAdjustment:  1.3,
-			TrustingPeriod: "504h",
-			//EncodingConfig: WasmClientEncoding(),
-			NoHostMount:         true,
-			ConfigFileOverrides: configFileOverrides,
-		},
 		},
 	})
 

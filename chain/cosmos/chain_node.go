@@ -94,15 +94,13 @@ const (
 	privValPort = "1234/tcp"
 )
 
-var (
-	sentryPorts = nat.PortSet{
-		nat.Port(p2pPort):     {},
-		nat.Port(rpcPort):     {},
-		nat.Port(grpcPort):    {},
-		nat.Port(apiPort):     {},
-		nat.Port(privValPort): {},
-	}
-)
+var sentryPorts = nat.PortSet{
+	nat.Port(p2pPort):     {},
+	nat.Port(rpcPort):     {},
+	nat.Port(grpcPort):    {},
+	nat.Port(apiPort):     {},
+	nat.Port(privValPort): {},
+}
 
 // NewClient creates and assigns a new Tendermint RPC client to the ChainNode
 func (tn *ChainNode) NewClient(addr string) error {
@@ -804,7 +802,7 @@ func (tn *ChainNode) StoreClientContract(ctx context.Context, keyName string, fi
 	codeHashByte32 := sha256.Sum256(content)
 	codeHash := hex.EncodeToString(codeHashByte32[:])
 
-	//return stdout, nil
+	// return stdout, nil
 	return codeHash, nil
 }
 
@@ -1039,7 +1037,8 @@ func (tn *ChainNode) NodeID(ctx context.Context) (string, error) {
 // KeyBech32 retrieves the named key's address in bech32 format from the node.
 // bech is the bech32 prefix (acc|val|cons). If empty, defaults to the account key (same as "acc").
 func (tn *ChainNode) KeyBech32(ctx context.Context, name string, bech string) (string, error) {
-	command := []string{tn.Chain.Config().Bin, "keys", "show", "--address", name,
+	command := []string{
+		tn.Chain.Config().Bin, "keys", "show", "--address", name,
 		"--home", tn.HomeDir(),
 		"--keyring-backend", keyring.BackendTest,
 	}

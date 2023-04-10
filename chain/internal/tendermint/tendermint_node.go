@@ -40,8 +40,10 @@ type TendermintNode struct {
 }
 
 func NewTendermintNode(log *zap.Logger, i int, c ibc.Chain, dockerClient *dockerclient.Client, networkID string, testName string, image ibc.DockerImage) *TendermintNode {
-	tn := &TendermintNode{Log: log, Index: i, Chain: c,
-		DockerClient: dockerClient, NetworkID: networkID, TestName: testName, Image: image}
+	tn := &TendermintNode{
+		Log: log, Index: i, Chain: c,
+		DockerClient: dockerClient, NetworkID: networkID, TestName: testName, Image: image,
+	}
 
 	tn.containerLifecycle = dockerutil.NewContainerLifecycle(log, dockerClient, tn.Name())
 
@@ -62,15 +64,13 @@ const (
 	privValPort = "1234/tcp"
 )
 
-var (
-	sentryPorts = nat.PortSet{
-		nat.Port(p2pPort):     {},
-		nat.Port(rpcPort):     {},
-		nat.Port(grpcPort):    {},
-		nat.Port(apiPort):     {},
-		nat.Port(privValPort): {},
-	}
-)
+var sentryPorts = nat.PortSet{
+	nat.Port(p2pPort):     {},
+	nat.Port(rpcPort):     {},
+	nat.Port(grpcPort):    {},
+	nat.Port(apiPort):     {},
+	nat.Port(privValPort): {},
+}
 
 // NewClient creates and assigns a new Tendermint RPC client to the TendermintNode
 func (tn *TendermintNode) NewClient(addr string) error {
@@ -187,7 +187,7 @@ func (tn *TendermintNode) SetConfigAndPeers(ctx context.Context, peers string) e
 // Tenderment deprecate snake_case in config for hyphen-case in v0.34.1
 // https://github.com/tendermint/tendermint/blob/main/CHANGELOG.md#v0341
 func (tn *TendermintNode) GetConfigSeparator() (string, error) {
-	var sep = "_"
+	sep := "_"
 
 	currentTnVersion, err := version.NewVersion(tn.Image.Version[1:])
 	if err != nil {
@@ -214,7 +214,8 @@ func (tn *TendermintNode) Height(ctx context.Context) (uint64, error) {
 
 // InitHomeFolder initializes a home folder for the given node
 func (tn *TendermintNode) InitHomeFolder(ctx context.Context, mode string) error {
-	command := []string{tn.Chain.Config().Bin, "init", mode,
+	command := []string{
+		tn.Chain.Config().Bin, "init", mode,
 		"--home", tn.HomeDir(),
 	}
 	_, _, err := tn.Exec(ctx, command, nil)
