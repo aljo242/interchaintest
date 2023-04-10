@@ -170,3 +170,9 @@ func (s *SidecarProcess) Exec(ctx context.Context, cmd []string, env []string) (
 	res := job.Run(ctx, cmd, opts)
 	return res.Stdout, res.Stderr, res.Err
 }
+
+// Running will inspect the sidecar process and check its state to determine if it is currently running.
+// If the container is running nil will be returned, otherwise an error is returned.
+func (s *SidecarProcess) Running(ctx context.Context) error {
+	return s.containerLifecycle.Running(ctx)
+}
