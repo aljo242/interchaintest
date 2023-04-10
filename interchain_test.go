@@ -10,7 +10,6 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
@@ -212,7 +211,7 @@ func TestInterchain_CreateUser(t *testing.T) {
 		_, mnemonic, err := kr.NewMnemonic(
 			keyName,
 			keyring.English,
-			hd.CreateHDPath(types.CoinType, 0, 0).String(),
+			hd.CreateHDPath(sdk.CoinType, 0, 0).String(),
 			"", // Empty passphrase.
 			hd.Secp256k1,
 		)
@@ -310,7 +309,7 @@ func broadcastTxCosmosChainTest(t *testing.T, relayerImpl ibc.RelayerImplementat
 
 	t.Run("broadcast success", func(t *testing.T) {
 		b := cosmos.NewBroadcaster(t, gaia0.(*cosmos.CosmosChain))
-		transferAmount := types.Coin{Denom: gaia0.Config().Denom, Amount: types.NewInt(sendAmount)}
+		transferAmount := sdk.Coin{Denom: gaia0.Config().Denom, Amount: sdk.NewInt(sendAmount)}
 
 		msg := transfertypes.NewMsgTransfer(
 			"transfer",

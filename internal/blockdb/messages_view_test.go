@@ -293,6 +293,7 @@ WHERE type = "/ibc.core.channel.v1.MsgRecvPacket" AND chain_id = ?
 `
 
 		var portID, channelID, counterpartyPortID, counterpartyChannelID string
+
 		require.NoError(t, db.QueryRow(qMsgRecvPacket, gaia1ChainID).Scan(&portID, &channelID, &counterpartyPortID, &counterpartyChannelID))
 
 		require.Equal(t, portID, gaia0Port)

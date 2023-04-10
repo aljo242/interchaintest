@@ -19,7 +19,7 @@ import (
 // chainSet is an unordered collection of ibc.Chain,
 // to group methods that apply actions against all chains in the set.
 //
-// The main purpose of the chainSet is to unify test setup when working with any number of chains.
+// The main purpose of the chainSet is to unify testutil setup when working with any number of chains.
 type chainSet struct {
 	log *zap.Logger
 
@@ -120,7 +120,7 @@ func (cs *chainSet) Start(ctx context.Context, testName string, additionalGenesi
 
 // TrackBlocks initializes database tables and polls for transactions to be saved in the database.
 // This method is a nop if dbPath is blank.
-// The gitSha is used to pin a git commit to a test invocation. Thus, when a user is looking at historical
+// The gitSha is used to pin a git commit to a testutil invocation. Thus, when a user is looking at historical
 // data they are able to determine which version of the code produced the results.
 // Expected to be called after Start.
 func (cs chainSet) TrackBlocks(ctx context.Context, testName, dbPath, gitSha string) error {
@@ -146,7 +146,7 @@ func (cs chainSet) TrackBlocks(ctx context.Context, testName, dbPath, gitSha str
 	testCase, err := blockdb.CreateTestCase(ctx, db, testName, gitSha)
 	if err != nil {
 		_ = db.Close()
-		return fmt.Errorf("create test case in sqlite database: %w", err)
+		return fmt.Errorf("create testutil case in sqlite database: %w", err)
 	}
 
 	// TODO (nix - 6/1/22) Need logger instead of fmt.Fprint

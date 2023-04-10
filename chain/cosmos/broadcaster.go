@@ -34,13 +34,13 @@ type User interface {
 type Broadcaster struct {
 	// buf stores the output sdk.TxResponse when broadcast.Tx is invoked.
 	buf *bytes.Buffer
-	// keyrings is a mapping of keyrings which point to a temporary test directory. The contents
+	// keyrings is a mapping of keyrings which point to a temporary testutil directory. The contents
 	// of this directory are copied from the node container for the specific user.
 	keyrings map[User]keyring.Keyring
 
 	// chain is a reference to the CosmosChain instance which will be the target of the messages.
 	chain *CosmosChain
-	// t is the testing.T for the current test.
+	// t is the testing.T for the current testutil.
 	t *testing.T
 
 	// factoryOptions is a slice of broadcast.FactoryOpt which enables arbitrary configuration of the tx.Factory.
@@ -160,11 +160,11 @@ func (b *Broadcaster) defaultClientContext(fromUser User, sdkAdd sdk.AccAddress)
 		WithSkipConfirmation(true).
 		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithKeyring(kr).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync).
 		WithCodec(b.chain.cfg.EncodingConfig.Codec)
 
 	// NOTE: the returned context used to have .WithHomeDir(cn.Home),
-	// but that field no longer exists and the test against Broadcaster still passes without it.
+	// but that field no longer exists and the testutil against Broadcaster still passes without it.
 }
 
 // defaultTxFactory creates a new Factory with default configuration.

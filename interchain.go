@@ -202,7 +202,7 @@ type InterchainBuildOptions struct {
 	// This is useful for tests that need lower-level access to configuring relayers.
 	SkipPathCreation bool
 
-	// Optional. Git sha for test invocation. Once Go 1.18 supported,
+	// Optional. Git sha for testutil invocation. Once Go 1.18 supported,
 	// may be deprecated in favor of runtime/debug.ReadBuildInfo.
 	GitSha string
 

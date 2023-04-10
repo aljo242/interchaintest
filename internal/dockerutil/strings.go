@@ -35,7 +35,7 @@ func GetHostPort(cont types.ContainerJSON, portID string) string {
 // Ensure that the global RNG is seeded when this package is imported.
 // Otherwise, each importer would need to seed explicitly on their own.
 //
-// Without pre-seeding, it is possible for two independent test binaries
+// Without pre-seeding, it is possible for two independent testutil binaries
 // to attempt to create a Docker network with the same random suffix
 // due to unintentionally both using the default seed.
 func init() {

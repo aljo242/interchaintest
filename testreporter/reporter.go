@@ -72,7 +72,7 @@ func (r *Reporter) Close() error {
 }
 
 // TrackParameters is intended to be called from the outermost layer of tests.
-// It tracks the test run including labels indicative of what relayers and chains are used.
+// It tracks the testutil run including labels indicative of what relayers and chains are used.
 func (r *Reporter) TrackParameters(t T, relayerLabels []label.Relayer, chainLabels []label.Chain) {
 	for _, l := range relayerLabels {
 		if !l.IsKnown() {
@@ -91,7 +91,7 @@ func (r *Reporter) TrackParameters(t T, relayerLabels []label.Relayer, chainLabe
 func (r *Reporter) TrackTest(t T, labels ...label.Test) {
 	for _, l := range labels {
 		if !l.IsKnown() {
-			panic(fmt.Errorf("illegal use of unknown test label %q", l))
+			panic(fmt.Errorf("illegal use of unknown testutil label %q", l))
 		}
 	}
 
@@ -100,8 +100,8 @@ func (r *Reporter) TrackTest(t T, labels ...label.Test) {
 	})
 }
 
-// trackTest tracks the test start and finish time.
-// It also records which labels are present on the test.
+// trackTest tracks the testutil start and finish time.
+// It also records which labels are present on the testutil.
 func (r *Reporter) trackTest(t T, labels LabelSet) {
 	name := t.Name()
 	r.in <- BeginTestMessage{
@@ -120,7 +120,7 @@ func (r *Reporter) trackTest(t T, labels LabelSet) {
 	})
 }
 
-// TrackParallel tracks when the pause begins for a parallel test
+// TrackParallel tracks when the pause begins for a parallel testutil
 // and when it continues to resume.
 func (r *Reporter) TrackParallel(t T) {
 	name := t.Name()
@@ -135,7 +135,7 @@ func (r *Reporter) TrackParallel(t T) {
 	}
 }
 
-// TrackSkip records a the reason for a test being skipped,
+// TrackSkip records a the reason for a testutil being skipped,
 // and calls t.Skip.
 func (r *Reporter) TrackSkip(t T, format string, args ...any) {
 	now := time.Now()
@@ -188,7 +188,7 @@ func (r *RelayerExecReporter) TrackRelayerExec(
 	}
 }
 
-// TestifyT returns a TestifyReporter which will track logged errors in test.
+// TestifyT returns a TestifyReporter which will track logged errors in testutil.
 // Typically you will use this with the New method on the require or assert package:
 //
 //	req := require.New(reporter.TestifyT(t))

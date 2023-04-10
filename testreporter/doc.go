@@ -19,6 +19,14 @@
 //	  os.Exit(code)
 //	}
 //
+//	func TestMain(m *testing.M) {
+//	  f, _ := os.Create("/tmp/report.json")
+//	  reporter := testreporter.NewReporter(f)
+//	  code := m.Run()
+//	  _ = reporter.Close()
+//	  os.Exit(code)
+//	}
+//
 // Next, every test that needs to be tracked must call TrackTest.
 // If you omit the call to TrackTest, then the test's start and end time,
 // and skip/fail status, will not be reported.

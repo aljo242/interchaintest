@@ -221,6 +221,7 @@ func (commander) LinkPath(pathName, homeDir string, channelOpts ibc.CreateChanne
 		"--order", channelOpts.Order.String(),
 		"--version", channelOpts.Version,
 		"--client-tp", clientOpt.TrustingPeriod,
+		"--debug",
 
 		"--home", homeDir,
 	}

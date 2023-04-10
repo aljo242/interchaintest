@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 # Don't commit the interchaintest.test file,
 # regardless of where it was built.
 interchaintest.test
 .idea
 /bin
 vendor
+=======
+# Don't commit the ibctest.testutil file,
+# regardless of where it was built.
+ibctest.test
+
+/bin
+
+# ide
+.idea/
+>>>>>>> feat/container-lifecycle-v5

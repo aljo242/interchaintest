@@ -56,7 +56,7 @@ func TestRelayerSetup(t *testing.T, ctx context.Context, cf interchaintest.Chain
 		NetworkID: network,
 
 		// Create relayer keys and wallets but don't create links,
-		// since that is what we are about to test.
+		// since that is what we are about to testutil.
 		SkipPathCreation: true,
 	}))
 	defer ic.Close()

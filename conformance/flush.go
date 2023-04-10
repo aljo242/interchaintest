@@ -69,7 +69,6 @@ func TestRelayerFlushing(t *testing.T, ctx context.Context, cf interchaintest.Ch
 	req.Len(channels, 1)
 
 	c0ChannelID := channels[0].ChannelID
-	// c1ChannelID := channels[0].Counterparty.ChannelID
 
 	beforeTransferHeight, err := c0.Height(ctx)
 	req.NoError(err)

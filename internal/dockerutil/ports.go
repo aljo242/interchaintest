@@ -38,7 +38,7 @@ func openListenerOnFreePort() (*net.TCPListener, error) {
 // nextAvailablePort generates a docker PortBinding by finding the next available port.
 // The listener will be closed in the case of an error, otherwise it will be left open.
 // This allows multiple nextAvailablePort calls to find multiple available ports
-// before closing them so they are available for the PortBinding.
+// before closing them, so they are available for the PortBinding.
 func nextAvailablePort() (nat.PortBinding, *net.TCPListener, error) {
 	l, err := openListenerOnFreePort()
 	if err != nil {
