@@ -48,9 +48,15 @@ type ChainConfig struct {
 
 func (c ChainConfig) Clone() ChainConfig {
 	x := c
+
 	images := make([]DockerImage, len(c.Images))
 	copy(images, c.Images)
 	x.Images = images
+
+	sidecars := make([]SidecarConfig, len(c.SidecarConfigs))
+	copy(sidecars, c.SidecarConfigs)
+	x.SidecarConfigs = sidecars
+
 	return x
 }
 
