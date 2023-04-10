@@ -31,16 +31,10 @@ jobs:
 
       # run tests
       - name: run unit tests
-<<<<<<< HEAD
         # -short flag purposefully omitted because there are some longer unit tests
         run: go test -race -timeout 10m -p 2 $(go list ./... | grep -v /cmd | grep -v /examples)
   test-conformance:
     name: test-conformance
-=======
-        run: go testutil -race -timeout 30m -v -p 2 ./...
-  test-cmd-ibctest:
-    name: testutil-cmd-ibctest
->>>>>>> feat/container-lifecycle-v5
     runs-on: [self-hosted, linux]
     steps:
       # Install and setup go
@@ -59,11 +53,7 @@ jobs:
 
       # run tests
       - name: run conformance tests
-<<<<<<< HEAD
         run: (go test -race -timeout 30m -v -p 2 ./cmd/interchaintest) || (echo "\n\n*****CHAIN and RELAYER LOGS*****" && cat "$HOME/.interchaintest/logs/interchaintest.log" && exit 1)
-=======
-        run: (cd cmd/ibctest && go testutil -race -timeout 30m -v -p 2 ./...) || (echo "\n\n*****CHAIN and RELAYER LOGS*****" && cat "$HOME/.ibctest/logs/ibctest.log" && exit 1)
->>>>>>> feat/container-lifecycle-v5
   test-ibc-examples:
     name: testutil-ibc-examples
     runs-on: [self-hosted, linux]
@@ -84,11 +74,7 @@ jobs:
 
       # run tests
       - name: run example ibc tests
-<<<<<<< HEAD
         run: go test -race -timeout 30m -v -p 2 ./examples/ibc
-=======
-        run: cd examples/ibc && go testutil -race -timeout 30m -v -p 2 ./...
->>>>>>> feat/container-lifecycle-v5
   test-cosmos-examples:
     name: testutil-cosmos-examples
     runs-on: [self-hosted, linux]
@@ -109,8 +95,4 @@ jobs:
 
       # run tests
       - name: run example cosmos tests
-<<<<<<< HEAD
         run: go test -race -timeout 30m -v -p 2 ./examples/cosmos
-=======
-        run: cd examples/cosmos && go testutil -race -timeout 30m -v -p 2 ./...
->>>>>>> feat/container-lifecycle-v5
