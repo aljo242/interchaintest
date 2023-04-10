@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
 	"go.uber.org/zap"
 
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"

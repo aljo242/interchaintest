@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/docker/docker/client"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/label"
-	"github.com/strangelove-ventures/interchaintest/v6/relayer"
-	"github.com/strangelove-ventures/interchaintest/v6/relayer/hermes"
-	"github.com/strangelove-ventures/interchaintest/v6/relayer/rly"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/label"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer/hermes"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer/rly"
 	"go.uber.org/zap"
 )
 

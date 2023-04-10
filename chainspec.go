@@ -8,8 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/label"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/label"
 	"go.uber.org/zap"
 )
 
