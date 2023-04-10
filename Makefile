@@ -24,3 +24,21 @@ docker-mac-nuke: ## macOS only. Try docker-reset first. Kills and restarts Docke
 .PHONY: gen
 gen: ## Run code generators
 	go generate ./...
+
+###############################################################################
+###                                Linting                                  ###
+###############################################################################
+
+lint:
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --out-format=tab
+
+lint-fix:
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --fix --out-format=tab --issues-exit-code=0
+
+.PHONY: lint lint-fix
+
+format:
+	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run mvdan.cc/gofumpt -w .
+	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run github.com/client9/misspell/cmd/misspell -w
+	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run golang.org/x/tools/cmd/goimports -w -local github.com/ingenuity-build/quicksilver
+.PHONY: format
