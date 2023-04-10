@@ -1058,7 +1058,7 @@ func (tn *ChainNode) RemoveContainer(ctx context.Context) error {
 	return tn.containerLifecycle.RemoveContainer(ctx)
 }
 
-// InitValidatorFiles creates the node files and signs a genesis transaction
+// InitValidatorGenTx creates the node files and signs a genesis transaction
 func (tn *ChainNode) InitValidatorGenTx(
 	ctx context.Context,
 	chainType *ibc.ChainConfig,
