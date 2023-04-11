@@ -47,7 +47,7 @@ func (c *ContainerLifecycle) CreateContainer(
 	imageRef := image.Ref()
 	if len(entrypoint) != 0 {
 		c.log.Info(
-			"Will run command",
+			"Will run with entrypoint",
 			zap.String("image", imageRef),
 			zap.String("container", c.containerName),
 			zap.String("entrypoint", strings.Join(entrypoint, " ")),
