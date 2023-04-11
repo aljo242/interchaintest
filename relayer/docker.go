@@ -345,8 +345,15 @@ func (r *DockerRelayer) StartRelayer(ctx context.Context, rep ibc.RelayerExecRep
 	r.containerLifecycle = dockerutil.NewContainerLifecycle(r.log, r.client, containerName)
 
 	if err := r.containerLifecycle.CreateContainer(
-		ctx, r.testName, r.networkID, containerImage, nil,
-		r.Bind(), r.HostName(joinedPaths), cmd,
+		ctx,
+		r.testName,
+		r.networkID,
+		containerImage,
+		nil,
+		r.HostName(joinedPaths),
+		r.Bind(),
+		cmd,
+		[]string{},
 	); err != nil {
 		return err
 	}

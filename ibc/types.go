@@ -170,6 +170,7 @@ type SidecarConfig struct {
 	Image            DockerImage
 	Ports            []string
 	StartCmd         []string
+	EntryPoint       []string
 	PreStart         bool
 	ValidatorProcess bool
 }

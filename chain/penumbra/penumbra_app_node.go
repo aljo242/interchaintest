@@ -213,7 +213,17 @@ func (p *PenumbraAppNode) SendIBCTransfer(
 func (p *PenumbraAppNode) CreateNodeContainer(ctx context.Context) error {
 	cmd := []string{"pd", "start", "--host", "0.0.0.0", "--home", p.HomeDir()}
 
-	return p.containerLifecycle.CreateContainer(ctx, p.TestName, p.NetworkID, p.Image, exposedPorts, p.Bind(), p.HostName(), cmd)
+	return p.containerLifecycle.CreateContainer(
+		ctx,
+		p.TestName,
+		p.NetworkID,
+		p.Image,
+		exposedPorts,
+		p.HostName(),
+		p.Bind(),
+		cmd,
+		[]string{},
+	)
 }
 
 func (p *PenumbraAppNode) StopContainer(ctx context.Context) error {

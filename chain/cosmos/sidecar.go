@@ -40,6 +40,7 @@ type SidecarProcess struct {
 	Image        ibc.DockerImage
 	ports        nat.PortSet
 	startCmd     []string
+	entrypoint   []string
 
 	containerLifecycle *dockerutil.ContainerLifecycle
 }
@@ -54,8 +55,9 @@ func NewSidecar(
 	networkID, processName, testName string,
 	image ibc.DockerImage,
 	index int,
-	ports []string,
-	startCmd []string,
+	ports,
+	startCmd,
+	entrypoint []string,
 ) *SidecarProcess {
 	processPorts := nat.PortSet{}
 
@@ -76,6 +78,7 @@ func NewSidecar(
 		Image:            image,
 		ports:            processPorts,
 		startCmd:         startCmd,
+		entrypoint:       entrypoint,
 	}
 	s.containerLifecycle = dockerutil.NewContainerLifecycle(log, dockerClient, s.Name())
 
@@ -100,7 +103,7 @@ func (s *SidecarProcess) logger() *zap.Logger {
 }
 
 func (s *SidecarProcess) CreateContainer(ctx context.Context) error {
-	return s.containerLifecycle.CreateContainer(ctx, s.TestName, s.NetworkID, s.Image, s.ports, s.Bind(), s.HostName(), s.startCmd)
+	return s.containerLifecycle.CreateContainer(ctx, s.TestName, s.NetworkID, s.Image, s.ports, s.HostName(), s.Bind(), s.startCmd, s.entrypoint)
 }
 
 func (s *SidecarProcess) StartContainer(ctx context.Context) error {
@@ -164,8 +167,9 @@ func (s *SidecarProcess) ReadFile(ctx context.Context, relPath string) ([]byte, 
 func (s *SidecarProcess) Exec(ctx context.Context, cmd []string, env []string) ([]byte, []byte, error) {
 	job := dockerutil.NewImage(s.logger(), s.DockerClient, s.NetworkID, s.TestName, s.Image.Repository, s.Image.Version)
 	opts := dockerutil.ContainerOptions{
-		Env:   env,
-		Binds: s.Bind(),
+		Env:        env,
+		Binds:      s.Bind(),
+		Entrypoint: s.entrypoint,
 	}
 	res := job.Run(ctx, cmd, opts)
 	return res.Stdout, res.Stderr, res.Err

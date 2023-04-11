@@ -39,17 +39,28 @@ func (c *ContainerLifecycle) CreateContainer(
 	networkID string,
 	image ibc.DockerImage,
 	ports nat.PortSet,
-	volumeBinds []string,
 	hostName string,
-	cmd []string,
+	volumeBinds,
+	cmd,
+	entrypoint []string,
 ) error {
 	imageRef := image.Ref()
-	c.log.Info(
-		"Will run command",
-		zap.String("image", imageRef),
-		zap.String("container", c.containerName),
-		zap.String("command", strings.Join(cmd, " ")),
-	)
+	if len(entrypoint) != 0 {
+		c.log.Info(
+			"Will run command",
+			zap.String("image", imageRef),
+			zap.String("container", c.containerName),
+			zap.String("entrypoint", strings.Join(entrypoint, " ")),
+		)
+		cmd = []string{}
+	} else {
+		c.log.Info(
+			"Will run command",
+			zap.String("image", imageRef),
+			zap.String("container", c.containerName),
+			zap.String("command", strings.Join(cmd, " ")),
+		)
+	}
 
 	pb, listeners, err := GeneratePortBindings(ports)
 	if err != nil {
@@ -63,7 +74,7 @@ func (c *ContainerLifecycle) CreateContainer(
 		&container.Config{
 			Image: imageRef,
 
-			Entrypoint: []string{},
+			Entrypoint: entrypoint,
 			Cmd:        cmd,
 
 			Hostname: hostName,

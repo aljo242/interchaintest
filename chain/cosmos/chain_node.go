@@ -131,10 +131,25 @@ func (tn *ChainNode) NewSidecarProcess(
 	cli *dockerclient.Client,
 	networkID string,
 	image ibc.DockerImage,
-	ports []string,
-	startCmd []string,
+	ports,
+	startCmd,
+	entrypoint []string,
 ) error {
-	s := NewSidecar(tn.log, true, preStart, tn.Chain, cli, networkID, processName, testName, image, tn.Index, ports, startCmd)
+	s := NewSidecar(
+		tn.log,
+		true,
+		preStart,
+		tn.Chain,
+		cli,
+		networkID,
+		processName,
+		testName,
+		image,
+		tn.Index,
+		ports,
+		startCmd,
+		entrypoint,
+	)
 
 	v, err := cli.VolumeCreate(ctx, volumetypes.VolumeCreateBody{
 		Labels: map[string]string{
@@ -993,7 +1008,7 @@ func (tn *ChainNode) CreateNodeContainer(ctx context.Context) error {
 		cmd = []string{chainCfg.Bin, "start", "--home", tn.HomeDir(), "--x-crisis-skip-assert-invariants"}
 	}
 
-	return tn.containerLifecycle.CreateContainer(ctx, tn.TestName, tn.NetworkID, tn.Image, sentryPorts, tn.Bind(), tn.HostName(), cmd)
+	return tn.containerLifecycle.CreateContainer(ctx, tn.TestName, tn.NetworkID, tn.Image, sentryPorts, tn.HostName(), tn.Bind(), cmd, []string{})
 }
 
 func (tn *ChainNode) StartContainer(ctx context.Context) error {
