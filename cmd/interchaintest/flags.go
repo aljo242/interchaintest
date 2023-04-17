@@ -1,4 +1,4 @@
-package ibctest
+package interchaintest
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"os"
 	"time"
 
-	interchaintest "github.com/strangelove-ventures/ibctest/v5"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-// The value of the extra flags this testutil supports.
+// The value of the extra flags this test supports.
 type mainFlags struct {
 	LogFile           string
 	LogFormat         string

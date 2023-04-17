@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -19,10 +18,11 @@ import (
 	volumetypes "github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	dockerclient "github.com/docker/docker/client"
-	"github.com/strangelove-ventures/ibctest/v5/chain/internal/tendermint"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
-	"github.com/strangelove-ventures/ibctest/v5/testutil"
+	"github.com/pelletier/go-toml/v2"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/internal/tendermint"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -284,8 +284,10 @@ func (c *PenumbraChain) NewChainNode(
 		return PenumbraNode{}, fmt.Errorf("set tendermint volume owner: %w", err)
 	}
 
-	pn := &PenumbraAppNode{log: c.log, Index: i, Chain: c,
-		DockerClient: dockerClient, NetworkID: networkID, TestName: testName, Image: penumbraImage}
+	pn := &PenumbraAppNode{
+		log: c.log, Index: i, Chain: c,
+		DockerClient: dockerClient, NetworkID: networkID, TestName: testName, Image: penumbraImage,
+	}
 
 	pn.containerLifecycle = dockerutil.NewContainerLifecycle(c.log, dockerClient, pn.Name())
 

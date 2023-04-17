@@ -10,8 +10,8 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +32,7 @@ type PenumbraAppNode struct {
 	hostRPCPort  string
 	hostGRPCPort string
 
-	preStartListeners dockerutil.Listeners
+	preStartListeners dockerutil.Listeners //nolint:unused
 }
 
 const (
@@ -194,7 +194,6 @@ func (p *PenumbraAppNode) GetAddressBech32m(ctx context.Context, keyName string)
 		}
 	}
 	return "", errors.New("address not found")
-
 }
 
 func (p *PenumbraAppNode) SendFunds(ctx context.Context, keyName string, amount ibc.WalletAmount) error {
@@ -214,7 +213,17 @@ func (p *PenumbraAppNode) SendIBCTransfer(
 func (p *PenumbraAppNode) CreateNodeContainer(ctx context.Context) error {
 	cmd := []string{"pd", "start", "--host", "0.0.0.0", "--home", p.HomeDir()}
 
-	return p.containerLifecycle.CreateContainer(ctx, p.TestName, p.NetworkID, p.Image, exposedPorts, p.Bind(), p.HostName(), cmd)
+	return p.containerLifecycle.CreateContainer(
+		ctx,
+		p.TestName,
+		p.NetworkID,
+		p.Image,
+		exposedPorts,
+		p.HostName(),
+		p.Bind(),
+		cmd,
+		[]string{},
+	)
 }
 
 func (p *PenumbraAppNode) StopContainer(ctx context.Context) error {

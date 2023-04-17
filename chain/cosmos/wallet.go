@@ -2,11 +2,13 @@ package cosmos
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 )
 
-var _ ibc.Wallet = &CosmosWallet{}
-var _ User = &CosmosWallet{}
+var (
+	_ ibc.Wallet = &CosmosWallet{}
+	_ User       = &CosmosWallet{}
+)
 
 type CosmosWallet struct {
 	mnemonic string

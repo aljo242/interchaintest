@@ -9,13 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/icza/dyno"
-	interchaintest "github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
-	"github.com/strangelove-ventures/ibctest/v5/relayer"
-	"github.com/strangelove-ventures/ibctest/v5/testreporter"
-	"github.com/strangelove-ventures/ibctest/v5/testutil"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -57,7 +57,8 @@ func TestInterchainQueries(t *testing.T) {
 				GasPrices:      "0.00atom",
 				TrustingPeriod: "300h",
 				GasAdjustment:  1.1,
-			}},
+			},
+		},
 		{
 			ChainName: "receiver",
 			ChainConfig: ibc.ChainConfig{
@@ -72,7 +73,8 @@ func TestInterchainQueries(t *testing.T) {
 				TrustingPeriod: "300h",
 				GasAdjustment:  1.1,
 				ModifyGenesis:  modifyGenesisAllowICQQueries([]string{"/cosmos.bank.v1beta1.Query/AllBalances"}), // Add the whitelisted queries to the host chain
-			}},
+			},
+		},
 	})
 
 	chains, err := cf.Chains(t.Name())
@@ -141,7 +143,7 @@ func TestInterchainQueries(t *testing.T) {
 		func() {
 			err := r.StopRelayer(ctx, eRep)
 			if err != nil {
-				t.Logf("an error occured while stopping the relayer: %s", err)
+				t.Logf("an error occurred while stopping the relayer: %s", err)
 			}
 		},
 	)
@@ -160,7 +162,8 @@ func TestInterchainQueries(t *testing.T) {
 	chain2Addr := chain2User.(*cosmos.CosmosWallet).FormattedAddressWithPrefix(chain2.Config().Bech32Prefix)
 	require.NotEmpty(t, chain2Addr)
 
-	cmd := []string{"icq", "tx", "interquery", "send-query-all-balances", chanID, chain2Addr,
+	cmd := []string{
+		"icq", "tx", "interquery", "send-query-all-balances", chanID, chain2Addr,
 		"--node", chain1.GetRPCAddress(),
 		"--home", chain1.HomeDir(),
 		"--chain-id", chain1.Config().ChainID,
@@ -177,7 +180,8 @@ func TestInterchainQueries(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check the results from the interchain query above.
-	cmd = []string{"icq", "query", "interquery", "query-state", strconv.Itoa(1),
+	cmd = []string{
+		"icq", "query", "interquery", "query-state", strconv.Itoa(1),
 		"--node", chain1.GetRPCAddress(),
 		"--home", chain1.HomeDir(),
 		"--chain-id", chain1.Config().ChainID,

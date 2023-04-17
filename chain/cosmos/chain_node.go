@@ -22,12 +22,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	volumetypes "github.com/docker/docker/api/types/volume"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/blockdb"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
-	"github.com/strangelove-ventures/ibctest/v5/testutil"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/blockdb"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/p2p"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -50,6 +51,9 @@ type ChainNode struct {
 	TestName     string
 	Image        ibc.DockerImage
 
+	// Additional processes that need to be run on a per-validator basis.
+	Sidecars SidecarProcesses
+
 	lock sync.Mutex
 	log  *zap.Logger
 
@@ -59,7 +63,7 @@ type ChainNode struct {
 	hostRPCPort  string
 	hostGRPCPort string
 
-	preStartListeners dockerutil.Listeners
+	preStartListeners dockerutil.Listeners //nolint:unused
 }
 
 func NewChainNode(log *zap.Logger, validator bool, chain *CosmosChain, dockerClient *dockerclient.Client, networkID string, testName string, image ibc.DockerImage, index int) *ChainNode {
@@ -94,15 +98,13 @@ const (
 	privValPort = "1234/tcp"
 )
 
-var (
-	sentryPorts = nat.PortSet{
-		nat.Port(p2pPort):     {},
-		nat.Port(rpcPort):     {},
-		nat.Port(grpcPort):    {},
-		nat.Port(apiPort):     {},
-		nat.Port(privValPort): {},
-	}
-)
+var sentryPorts = nat.PortSet{
+	nat.Port(p2pPort):     {},
+	nat.Port(rpcPort):     {},
+	nat.Port(grpcPort):    {},
+	nat.Port(apiPort):     {},
+	nat.Port(privValPort): {},
+}
 
 // NewClient creates and assigns a new Tendermint RPC client to the ChainNode
 func (tn *ChainNode) NewClient(addr string) error {
@@ -118,6 +120,63 @@ func (tn *ChainNode) NewClient(addr string) error {
 	}
 
 	tn.Client = rpcClient
+	return nil
+}
+
+func (tn *ChainNode) NewSidecarProcess(
+	ctx context.Context,
+	preStart bool,
+	processName string,
+	testName string,
+	cli *dockerclient.Client,
+	networkID string,
+	image ibc.DockerImage,
+	ports,
+	startCmd,
+	entrypoint []string,
+) error {
+	s := NewSidecar(
+		tn.log,
+		true,
+		preStart,
+		tn.Chain,
+		cli,
+		networkID,
+		processName,
+		testName,
+		image,
+		tn.Index,
+		ports,
+		startCmd,
+		entrypoint,
+	)
+
+	v, err := cli.VolumeCreate(ctx, volumetypes.VolumeCreateBody{
+		Labels: map[string]string{
+			dockerutil.CleanupLabel:   testName,
+			dockerutil.NodeOwnerLabel: s.Name(),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("creating volume for sidecar process: %w", err)
+	}
+	s.VolumeName = v.Name
+
+	if err := dockerutil.SetVolumeOwner(ctx, dockerutil.VolumeOwnerOptions{
+		Log: tn.log,
+
+		Client: cli,
+
+		VolumeName: v.Name,
+		ImageRef:   image.Ref(),
+		TestName:   testName,
+		UidGid:     image.UidGid,
+	}); err != nil {
+		return fmt.Errorf("set volume owner: %w", err)
+	}
+
+	tn.Sidecars = append(tn.Sidecars, s)
+
 	return nil
 }
 
@@ -593,10 +652,8 @@ func (tn *ChainNode) AddGenesisAccount(ctx context.Context, address string, gene
 		}
 		amount += fmt.Sprintf("%d%s", coin.Amount.Int64(), coin.Denom)
 	}
-
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
-
 	// Adding a genesis account should complete instantly,
 	// so use a 1-minute timeout to more quickly detect if Docker has locked up.
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
@@ -792,6 +849,9 @@ func (tn *ChainNode) QueryContract(ctx context.Context, contractAddress string, 
 // StoreClientContract takes a file path to a client smart contract and stores it on-chain. Returns the contracts code id.
 func (tn *ChainNode) StoreClientContract(ctx context.Context, keyName string, fileName string) (string, error) {
 	content, err := os.ReadFile(fileName)
+	if err != nil {
+		return "", fmt.Errorf("reading contract file: %w", err)
+	}
 	_, file := filepath.Split(fileName)
 	err = tn.WriteFile(ctx, content, file)
 	if err != nil {
@@ -806,7 +866,7 @@ func (tn *ChainNode) StoreClientContract(ctx context.Context, keyName string, fi
 	codeHashByte32 := sha256.Sum256(content)
 	codeHash := hex.EncodeToString(codeHashByte32[:])
 
-	//return stdout, nil
+	// return stdout, nil
 	return codeHash, nil
 }
 
@@ -922,12 +982,12 @@ func (tn *ChainNode) ExportState(ctx context.Context, height int64) (string, err
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
 
-	_, stderr, err := tn.ExecBin(ctx, "export", "--height", fmt.Sprint(height))
+	stdout, stderr, err := tn.ExecBin(ctx, "export", "--height", fmt.Sprint(height))
 	if err != nil {
 		return "", err
 	}
-	// output comes to stderr for some reason
-	return string(stderr), nil
+	// output comes to stderr on older versions
+	return string(stdout) + string(stderr), nil
 }
 
 func (tn *ChainNode) UnsafeResetAll(ctx context.Context) error {
@@ -948,10 +1008,22 @@ func (tn *ChainNode) CreateNodeContainer(ctx context.Context) error {
 		cmd = []string{chainCfg.Bin, "start", "--home", tn.HomeDir(), "--x-crisis-skip-assert-invariants"}
 	}
 
-	return tn.containerLifecycle.CreateContainer(ctx, tn.TestName, tn.NetworkID, tn.Image, sentryPorts, tn.Bind(), tn.HostName(), cmd)
+	return tn.containerLifecycle.CreateContainer(ctx, tn.TestName, tn.NetworkID, tn.Image, sentryPorts, tn.HostName(), tn.Bind(), cmd, []string{})
 }
 
 func (tn *ChainNode) StartContainer(ctx context.Context) error {
+	for _, s := range tn.Sidecars {
+		if s.preStart && !s.started {
+			if err := s.CreateContainer(ctx); err != nil {
+				return err
+			}
+
+			if err := s.StartContainer(ctx); err != nil {
+				return err
+			}
+		}
+	}
+
 	if err := tn.containerLifecycle.StartContainer(ctx); err != nil {
 		return err
 	}
@@ -984,14 +1056,24 @@ func (tn *ChainNode) StartContainer(ctx context.Context) error {
 }
 
 func (tn *ChainNode) StopContainer(ctx context.Context) error {
+	for _, s := range tn.Sidecars {
+		if err := s.StopContainer(ctx); err != nil {
+			return err
+		}
+	}
 	return tn.containerLifecycle.StopContainer(ctx)
 }
 
 func (tn *ChainNode) RemoveContainer(ctx context.Context) error {
+	for _, s := range tn.Sidecars {
+		if err := s.RemoveContainer(ctx); err != nil {
+			return err
+		}
+	}
 	return tn.containerLifecycle.RemoveContainer(ctx)
 }
 
-// InitValidatorFiles creates the node files and signs a genesis transaction
+// InitValidatorGenTx creates the node files and signs a genesis transaction
 func (tn *ChainNode) InitValidatorGenTx(
 	ctx context.Context,
 	chainType *ibc.ChainConfig,
@@ -1024,6 +1106,7 @@ func (tn *ChainNode) NodeID(ctx context.Context) (string, error) {
 	// This used to call p2p.LoadNodeKey against the file on the host,
 	// but because we are transitioning to operating on Docker volumes,
 	// we only have to tmjson.Unmarshal the raw content.
+
 	j, err := tn.ReadFile(ctx, "config/node_key.json")
 	if err != nil {
 		return "", fmt.Errorf("getting node_key.json content: %w", err)
@@ -1040,7 +1123,8 @@ func (tn *ChainNode) NodeID(ctx context.Context) (string, error) {
 // KeyBech32 retrieves the named key's address in bech32 format from the node.
 // bech is the bech32 prefix (acc|val|cons). If empty, defaults to the account key (same as "acc").
 func (tn *ChainNode) KeyBech32(ctx context.Context, name string, bech string) (string, error) {
-	command := []string{tn.Chain.Config().Bin, "keys", "show", "--address", name,
+	command := []string{
+		tn.Chain.Config().Bin, "keys", "show", "--address", name,
 		"--home", tn.HomeDir(),
 		"--keyring-backend", keyring.BackendTest,
 	}

@@ -42,13 +42,21 @@ type ChainConfig struct {
 	EncodingConfig *simappparams.EncodingConfig
 	// Required when the chain uses the new sub commands for genesis (https://github.com/cosmos/cosmos-sdk/pull/14149)
 	UsingNewGenesisCommand bool `yaml:"using-new-genesis-command"`
+	// Configuration describing additional sidecar processes.
+	SidecarConfigs []SidecarConfig
 }
 
 func (c ChainConfig) Clone() ChainConfig {
 	x := c
+
 	images := make([]DockerImage, len(c.Images))
 	copy(images, c.Images)
 	x.Images = images
+
+	sidecars := make([]SidecarConfig, len(c.SidecarConfigs))
+	copy(sidecars, c.SidecarConfigs)
+	x.SidecarConfigs = sidecars
+
 	return x
 }
 
@@ -134,6 +142,10 @@ func (c ChainConfig) MergeChainSpecConfig(other ChainConfig) ChainConfig {
 		c.EncodingConfig = other.EncodingConfig
 	}
 
+	if len(other.SidecarConfigs) > 0 {
+		c.SidecarConfigs = append([]SidecarConfig(nil), other.SidecarConfigs...)
+	}
+
 	return c
 }
 
@@ -150,6 +162,17 @@ func (c ChainConfig) IsFullyConfigured() bool {
 		c.Denom != "" &&
 		c.GasPrices != "" &&
 		c.TrustingPeriod != ""
+}
+
+// SidecarConfig describes the configuration options for instantiating a new sidecar process.
+type SidecarConfig struct {
+	ProcessName      string
+	Image            DockerImage
+	Ports            []string
+	StartCmd         []string
+	EntryPoint       []string
+	PreStart         bool
+	ValidatorProcess bool
 }
 
 type DockerImage struct {

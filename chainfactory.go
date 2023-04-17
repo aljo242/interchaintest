@@ -1,4 +1,4 @@
-package ibctest
+package interchaintest
 
 import (
 	_ "embed"
@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/strangelove-ventures/ibctest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/ibctest/v5/chain/penumbra"
-	"github.com/strangelove-ventures/ibctest/v5/chain/polkadot"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/label"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/penumbra"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/polkadot"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/label"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
@@ -146,10 +146,10 @@ func buildChain(log *zap.Logger, testName string, cfg ibc.ChainConfig, numValida
 		switch {
 		case strings.Contains(cfg.Name, "composable"):
 			parachains := []polkadot.ParachainConfig{{
-				//Bin:             "composable",
+				// Bin:             "composable",
 				Bin:     "parachain-node",
 				ChainID: "dev-2000",
-				//ChainID:         "dali-dev",
+				// ChainID:         "dali-dev",
 				Image:           cfg.Images[1],
 				NumNodes:        nf,
 				Flags:           []string{"--execution=wasm", "--wasmtime-instantiation-strategy=recreate-instance-copy-on-write"},

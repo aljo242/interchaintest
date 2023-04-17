@@ -1,19 +1,19 @@
-package ibctest_test
+package interchaintest_test
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
 func TestChainSpec_Config(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
-		s := ibctest.ChainSpec{
+		s := interchaintest.ChainSpec{
 			Name: "gaia",
 
 			Version: "v7.0.1",
@@ -24,7 +24,7 @@ func TestChainSpec_Config(t *testing.T) {
 	})
 
 	t.Run("omit name when all other fields provided", func(t *testing.T) {
-		s := ibctest.ChainSpec{
+		s := interchaintest.ChainSpec{
 			ChainName: "mychain",
 
 			ChainConfig: ibc.ChainConfig{
@@ -48,7 +48,7 @@ func TestChainSpec_Config(t *testing.T) {
 	})
 
 	t.Run("consistently generated config", func(t *testing.T) {
-		s := ibctest.ChainSpec{
+		s := interchaintest.ChainSpec{
 			Name: "gaia",
 
 			Version: "v7.0.1",
@@ -66,7 +66,7 @@ func TestChainSpec_Config(t *testing.T) {
 
 	t.Run("name and chain ID generation", func(t *testing.T) {
 		t.Run("same name and chain ID generated when ChainName and ChainID omitted", func(t *testing.T) {
-			s := ibctest.ChainSpec{
+			s := interchaintest.ChainSpec{
 				Name: "gaia",
 
 				Version: "v7.0.1",
@@ -80,7 +80,7 @@ func TestChainSpec_Config(t *testing.T) {
 		})
 
 		t.Run("chain ID generated from ChainName, when ChainName provided", func(t *testing.T) {
-			s := ibctest.ChainSpec{
+			s := interchaintest.ChainSpec{
 				Name:      "gaia",
 				ChainName: "mychain",
 
@@ -96,7 +96,7 @@ func TestChainSpec_Config(t *testing.T) {
 	})
 
 	t.Run("overrides", func(t *testing.T) {
-		baseSpec := &ibctest.ChainSpec{
+		baseSpec := &interchaintest.ChainSpec{
 			Name:    "gaia",
 			Version: "v7.0.1",
 
@@ -133,35 +133,47 @@ func TestChainSpec_Config(t *testing.T) {
 
 			require.Equal(t, m, cfg.NoHostMount)
 		})
-	})
 
-	t.Run("error cases", func(t *testing.T) {
-		t.Run("version required", func(t *testing.T) {
-			s := ibctest.ChainSpec{
-				Name: "gaia",
-			}
+		t.Run("UsingNewGenesisCommand", func(t *testing.T) {
+			require.False(t, baseCfg.UsingNewGenesisCommand)
 
-			_, err := s.Config(zaptest.NewLogger(t))
-			require.EqualError(t, err, "ChainSpec.Version must not be empty")
+			s := baseSpec
+			s.UsingNewGenesisCommand = true
+
+			cfg, err := s.Config(zaptest.NewLogger(t))
+			require.NoError(t, err)
+
+			require.True(t, cfg.UsingNewGenesisCommand)
 		})
 
-		t.Run("name required", func(t *testing.T) {
-			s := ibctest.ChainSpec{
-				Version: "v1.2.3",
-			}
+		t.Run("error cases", func(t *testing.T) {
+			t.Run("version required", func(t *testing.T) {
+				s := interchaintest.ChainSpec{
+					Name: "gaia",
+				}
 
-			_, err := s.Config(zaptest.NewLogger(t))
-			require.EqualError(t, err, "ChainSpec.Name required when not all config fields are set")
-		})
+				_, err := s.Config(zaptest.NewLogger(t))
+				require.EqualError(t, err, "ChainSpec.Version must not be empty")
+			})
 
-		t.Run("name invalid", func(t *testing.T) {
-			s := ibctest.ChainSpec{
-				Name:    "invalid_chain",
-				Version: "v1.2.3",
-			}
+			t.Run("name required", func(t *testing.T) {
+				s := interchaintest.ChainSpec{
+					Version: "v1.2.3",
+				}
 
-			_, err := s.Config(zaptest.NewLogger(t))
-			require.ErrorContains(t, err, "no chain configuration for invalid_chain (available chains are:")
+				_, err := s.Config(zaptest.NewLogger(t))
+				require.EqualError(t, err, "ChainSpec.Name required when not all config fields are set")
+			})
+
+			t.Run("name invalid", func(t *testing.T) {
+				s := interchaintest.ChainSpec{
+					Name:    "invalid_chain",
+					Version: "v1.2.3",
+				}
+
+				_, err := s.Config(zaptest.NewLogger(t))
+				require.ErrorContains(t, err, "no chain configuration for invalid_chain (available chains are:")
+			})
 		})
 	})
 }

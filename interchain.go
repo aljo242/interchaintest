@@ -1,12 +1,12 @@
-package ibctest
+package interchaintest
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/docker/docker/client"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )

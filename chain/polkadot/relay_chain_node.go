@@ -13,13 +13,13 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	p2pCrypto "github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/libp2p/go-libp2p-core/peer"
+	p2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/zap"
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
 )
 
 // RelayChainNode defines the properties required for running a polkadot relay chain node.
@@ -45,14 +45,14 @@ type RelayChainNode struct {
 	hostWsPort  string
 	hostRpcPort string
 
-	preStartListeners dockerutil.Listeners
+	preStartListeners dockerutil.Listeners //nolint:unused
 }
 
 type RelayChainNodes []*RelayChainNode
 
 const (
 	wsPort = "27451/tcp"
-	//rpcPort        = "27452/tcp"
+	// rpcPort        = "27452/tcp"
 	nodePort       = "27452/tcp"
 	rpcPort        = "9933/tcp"
 	prometheusPort = "27453/tcp"
@@ -98,7 +98,7 @@ func (p *RelayChainNode) PeerID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return peer.Encode(id), nil
+	return id.String(), nil
 }
 
 // GrandpaAddress returns the ss58 encoded grandpa (consensus) address.
@@ -222,7 +222,7 @@ func (p *RelayChainNode) CreateNodeContainer(ctx context.Context) error {
 		fmt.Sprintf("--public-addr=%s", multiAddress),
 		"--base-path", p.NodeHome(),
 	}
-	return p.containerLifecycle.CreateContainer(ctx, p.TestName, p.NetworkID, p.Image, exposedPorts, p.Bind(), p.HostName(), cmd)
+	return p.containerLifecycle.CreateContainer(ctx, p.TestName, p.NetworkID, p.Image, exposedPorts, p.HostName(), p.Bind(), cmd, []string{})
 }
 
 // StopContainer stops the relay chain node container, waiting at most 30 seconds.

@@ -1,5 +1,5 @@
-// Command ibctest allows running the relayer tests with command-line configuration.
-package ibctest
+// Command interchaintest allows running the relayer tests with command-line configuration.
+package interchaintest
 
 import (
 	"context"
@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	interchaintest "github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/conformance"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/blockdb"
-	blockdbtui "github.com/strangelove-ventures/ibctest/v5/internal/blockdb/tui"
-	"github.com/strangelove-ventures/ibctest/v5/internal/version"
-	"github.com/strangelove-ventures/ibctest/v5/relayer"
-	"github.com/strangelove-ventures/ibctest/v5/testreporter"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/conformance"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/blockdb"
+	blockdbtui "github.com/strangelove-ventures/interchaintest/v5/internal/blockdb/tui"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/version"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
 	"go.uber.org/zap"
 )
 
@@ -152,7 +152,7 @@ func configureTestReporter() error {
 		return fmt.Errorf("failed to get user home dir: %w", err)
 	}
 	fpath := filepath.Join(home, ".interchaintest", "reports")
-	err = os.MkdirAll(fpath, 0755)
+	err = os.MkdirAll(fpath, 0o755)
 	if err != nil {
 		return fmt.Errorf("mkdirall: %w", err)
 	}
@@ -231,7 +231,7 @@ func TestConformance(t *testing.T) {
 		relayerFactories[i] = rf
 	}
 
-	// Begin testutil execution, which will spawn many parallel subtests.
+	// Begin test execution, which will spawn many parallel subtests.
 	conformance.Test(t, ctx, chainFactories, relayerFactories, reporter)
 }
 
@@ -241,11 +241,11 @@ func TestConformance(t *testing.T) {
 // testing flags, so I fell back to plain Go standard library flags.
 // We can revisit if necessary.
 func addFlags() {
-	flag.StringVar(&extraFlags.MatrixFile, "matrix", "", "Path to matrix file defining what configurations to testutil")
+	flag.StringVar(&extraFlags.MatrixFile, "matrix", "", "Path to matrix file defining what configurations to test")
 	flag.StringVar(&extraFlags.LogFile, "log-file", "interchaintest.log", "File to write chain and relayer logs. If a file name, logs written to $HOME/.interchaintest/logs directory. Use 'stderr' or 'stdout' to print logs in line tests.")
 	flag.StringVar(&extraFlags.LogFormat, "log-format", "console", "Chain and relayer log format: console|json")
 	flag.StringVar(&extraFlags.LogLevel, "log-level", "info", "Chain and relayer log level: debug|info|error")
-	flag.StringVar(&extraFlags.ReportFile, "report-file", "", "Path where testutil report will be stored. Defaults to $HOME/.interchaintest/reports/$TIMESTAMP.json")
+	flag.StringVar(&extraFlags.ReportFile, "report-file", "", "Path where test report will be stored. Defaults to $HOME/.interchaintest/reports/$TIMESTAMP.json")
 
 	debugFlagSet.StringVar(&extraFlags.BlockDatabaseFile, "block-db", interchaintest.DefaultBlockDatabaseFilepath(), "Path to database sqlite file that tracks blocks and transactions.")
 }

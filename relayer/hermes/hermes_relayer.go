@@ -10,8 +10,8 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/pelletier/go-toml"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +45,7 @@ type ChainConfig struct {
 	keyName, rpcAddr, grpcAddr string
 }
 
-// pathConfiguration represents the concept of a "path" which is implemented at the interchain testutil level rather
+// pathConfiguration represents the concept of a "path" which is implemented at the interchain test level rather
 // than the hermes level.
 type pathConfiguration struct {
 	chainA, chainB pathChainConfig
@@ -190,7 +190,6 @@ func (r *Relayer) CreateClients(ctx context.Context, rep ibc.RelayerExecReporter
 // RestoreKey restores a key from a mnemonic. In hermes, you must provide a file containing the mnemonic. We need
 // to copy the contents of the mnemonic into a file on disk and then reference the newly created file.
 func (r *Relayer) RestoreKey(ctx context.Context, rep ibc.RelayerExecReporter, chainID, keyName, coinType, mnemonic string) error {
-
 	relativeMnemonicFilePath := fmt.Sprintf("%s/mnemonic.txt", chainID)
 	if err := r.WriteFileToHomeDir(ctx, relativeMnemonicFilePath, []byte(mnemonic)); err != nil {
 		return fmt.Errorf("failed to write mnemonic file: %w", err)
@@ -221,7 +220,7 @@ func (r *Relayer) Flush(ctx context.Context, rep ibc.RelayerExecReporter, pathNa
 }
 
 // GeneratePath establishes an in memory path representation. The concept does not exist in hermes, so it is handled
-// at the interchain testutil level.
+// at the interchain test level.
 func (r *Relayer) GeneratePath(ctx context.Context, rep ibc.RelayerExecReporter, srcChainID, dstChainID, pathName string) error {
 	if r.paths == nil {
 		r.paths = map[string]*pathConfiguration{}
@@ -255,7 +254,7 @@ func (r *Relayer) configContent(cfg ibc.ChainConfig, keyName, rpcAddr, grpcAddr 
 	return bz, nil
 }
 
-// validateConfig validates the hermes config file. Any errors are propagated to the testutil.
+// validateConfig validates the hermes config file. Any errors are propagated to the test.
 func (r *Relayer) validateConfig(ctx context.Context, rep ibc.RelayerExecReporter) error {
 	cmd := []string{hermes, "--config", fmt.Sprintf("%s/%s", r.HomeDir(), hermesConfigPath), "config", "validate"}
 	res := r.Exec(ctx, rep, cmd, nil)

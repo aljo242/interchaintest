@@ -1,7 +1,7 @@
 package blockdb_test
 
 // This test is in a separate file, so it can be in the blockdb_test package,
-// so it can import ibctest without creating an import cycle.
+// so it can import interchaintest without creating an import cycle.
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	interchaintest "github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/relayer"
-	"github.com/strangelove-ventures/ibctest/v5/testreporter"
-	"github.com/strangelove-ventures/ibctest/v5/testutil"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -300,13 +300,28 @@ WHERE type = "/ibc.core.channel.v1.MsgRecvPacket" AND chain_id = ?
 		require.Equal(t, channelID, gaia0ChannelID)
 		require.Equal(t, counterpartyPortID, gaia1Port)
 		require.Equal(t, counterpartyChannelID, gaia1ChannelID)
+	})
+	if t.Failed() {
+		return
+	}
 
-		const qMsgAck = `SELECT
+	if !rf.Capabilities()[relayer.Flush] {
+		t.Skip("cannot continue due to missing capability Flush")
+	}
+
+	t.Run("relay", func(t *testing.T) {
+		require.NoError(t, r.Flush(ctx, eRep, pathName, gaia0ChannelID))
+		require.NoError(t, testutil.WaitForBlocks(ctx, 5, gaia0))
+
+		const qMsgRecvPacket = `SELECT
 port_id, channel_id, counterparty_port_id, counterparty_channel_id
 FROM v_cosmos_messages
-WHERE type = "/ibc.core.channel.v1.MsgAcknowledgement" AND chain_id = ?
+WHERE type = "/ibc.core.channel.v1.MsgRecvPacket" AND chain_id = ?
 `
-		require.NoError(t, db.QueryRow(qMsgAck, gaia0ChainID).Scan(&portID, &channelID, &counterpartyPortID, &counterpartyChannelID))
+
+		var portID, channelID, counterpartyPortID, counterpartyChannelID string
+
+		require.NoError(t, db.QueryRow(qMsgRecvPacket, gaia1ChainID).Scan(&portID, &channelID, &counterpartyPortID, &counterpartyChannelID))
 
 		require.Equal(t, portID, gaia0Port)
 		require.Equal(t, channelID, gaia0ChannelID)

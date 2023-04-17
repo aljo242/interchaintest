@@ -12,10 +12,10 @@ import (
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/docker/docker/client"
 	"github.com/icza/dyno"
-	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/libp2p/go-libp2p-core/peer"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
+	p2pcrypto "github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
 	"go.uber.org/zap"
 )
 
@@ -42,7 +42,7 @@ type ParachainNode struct {
 	hostWsPort  string
 	hostRpcPort string
 
-	preStartListeners dockerutil.Listeners
+	preStartListeners dockerutil.Listeners //nolint:unused
 }
 
 type ParachainNodes []*ParachainNode
@@ -98,7 +98,7 @@ func (pn *ParachainNode) PeerID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return peer.Encode(id), nil
+	return id.String(), nil
 }
 
 // MultiAddress returns the p2p multiaddr of the node.
@@ -246,7 +246,7 @@ func (pn *ParachainNode) CreateNodeContainer(ctx context.Context) error {
 	cmd = append(cmd, "--", fmt.Sprintf("--chain=%s", pn.RawRelayChainSpecFilePathFull()))
 	cmd = append(cmd, pn.RelayChainFlags...)
 
-	return pn.containerLifecycle.CreateContainer(ctx, pn.TestName, pn.NetworkID, pn.Image, exposedPorts, pn.Bind(), pn.HostName(), cmd)
+	return pn.containerLifecycle.CreateContainer(ctx, pn.TestName, pn.NetworkID, pn.Image, exposedPorts, pn.HostName(), pn.Bind(), cmd, []string{})
 }
 
 // StopContainer stops the relay chain node container, waiting at most 30 seconds.

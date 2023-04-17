@@ -7,17 +7,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/configutil"
-	"github.com/strangelove-ventures/ibctest/v5/testutil"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
 func TestCosmosHubStateSync(t *testing.T) {
-	CosmosChainStateSyncTest(t, "gaia", "v7.0.3")
+	CosmosChainStateSyncTest(t, "gaia", gaiaVersion)
 }
 
 const stateSyncSnapshotInterval = 10
@@ -32,10 +31,10 @@ func CosmosChainStateSyncTest(t *testing.T, chainName, version string) {
 	nf := 1
 
 	configFileOverrides := make(map[string]any)
-	appTomlOverrides := make(configutil.Toml)
+	appTomlOverrides := make(testutil.Toml)
 
 	// state sync snapshots every stateSyncSnapshotInterval blocks.
-	stateSync := make(configutil.Toml)
+	stateSync := make(testutil.Toml)
 	stateSync["snapshot-interval"] = stateSyncSnapshotInterval
 	appTomlOverrides["state-sync"] = stateSync
 
@@ -47,7 +46,7 @@ func CosmosChainStateSyncTest(t *testing.T, chainName, version string) {
 
 	configFileOverrides["config/app.toml"] = appTomlOverrides
 
-	cf := ibctest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*ibctest.ChainSpec{
+	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:      chainName,
 			ChainName: chainName,
@@ -64,17 +63,17 @@ func CosmosChainStateSyncTest(t *testing.T, chainName, version string) {
 
 	chain := chains[0].(*cosmos.CosmosChain)
 
-	ic := ibctest.NewInterchain().
+	ic := interchaintest.NewInterchain().
 		AddChain(chain)
 
 	ctx := context.Background()
-	client, network := ibctest.DockerSetup(t)
+	client, network := interchaintest.DockerSetup(t)
 
-	require.NoError(t, ic.Build(ctx, nil, ibctest.InterchainBuildOptions{
+	require.NoError(t, ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
 		TestName:          t.Name(),
 		Client:            client,
 		NetworkID:         network,
-		BlockDatabaseFile: ibctest.DefaultBlockDatabaseFilepath(),
+		BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 		SkipPathCreation:  true,
 	}))
 	t.Cleanup(func() {
@@ -99,10 +98,10 @@ func CosmosChainStateSyncTest(t *testing.T, chainName, version string) {
 
 	// Construct statesync parameters for new node to get in sync.
 	configFileOverrides = make(map[string]any)
-	configTomlOverrides := make(configutil.Toml)
+	configTomlOverrides := make(testutil.Toml)
 
 	// Set trusted parameters and rpc servers for verification.
-	stateSync = make(configutil.Toml)
+	stateSync = make(testutil.Toml)
 	stateSync["trust_hash"] = trustHash
 	stateSync["trust_height"] = trustHeight
 	// State sync requires minimum of two RPC servers for verification. We can provide the same RPC twice though.

@@ -89,6 +89,9 @@ type ContainerOptions struct {
 
 	// If non-zero, will limit the amount of log lines returned.
 	LogTail uint64
+
+	// Entrypoint override for container. If entrypoint is provided, it is used over CMD.
+	Entrypoint []string
 }
 
 // ContainerExecResult is a wrapper type that wraps an exit code and associated output from stderr & stdout, along with
@@ -116,23 +119,56 @@ func (image *Image) Run(ctx context.Context, cmd []string, opts ContainerOptions
 	return c.Wait(ctx, opts.LogTail)
 }
 
-func (image *Image) imageRef() string {
-	return image.repository + ":" + image.tag
-}
-
-// ensurePulled can only pull public images.
-func (image *Image) ensurePulled(ctx context.Context) error {
-	ref := image.imageRef()
-	_, _, err := image.client.ImageInspectWithRaw(ctx, ref)
-	if err != nil {
-		rc, err := image.client.ImagePull(ctx, ref, types.ImagePullOptions{})
-		if err != nil {
-			return fmt.Errorf("pull image %s: %w", ref, err)
-		}
-		_, _ = io.Copy(io.Discard, rc)
-		_ = rc.Close()
+// Start pulls the image if not present, creates a container, and runs it.
+func (image *Image) Start(ctx context.Context, cmd []string, opts ContainerOptions) (*Container, error) {
+	if len(cmd) == 0 && len(opts.Entrypoint) == 0 {
+		panic(errors.New("cmd and entrypoint cannot be empty"))
 	}
-	return nil
+
+	if err := image.ensurePulled(ctx); err != nil {
+		return nil, image.wrapErr(err)
+	}
+
+	var (
+		containerName = SanitizeContainerName(image.testName + "-" + RandLowerCaseLetterString(6))
+		hostName      = CondenseHostName(containerName)
+		logger        = &zap.Logger{}
+	)
+
+	if len(opts.Entrypoint) != 0 {
+		logger = image.log.With(
+			zap.String("entrypoint", strings.Join(opts.Entrypoint, " ")),
+			zap.String("hostname", hostName),
+			zap.String("container", containerName),
+		)
+		cmd = []string{}
+	} else {
+		logger = image.log.With(
+			zap.String("command", strings.Join(cmd, " ")),
+			zap.String("hostname", hostName),
+			zap.String("container", containerName),
+		)
+	}
+
+	cID, err := image.createContainer(ctx, containerName, hostName, cmd, opts)
+	if err != nil {
+		return nil, image.wrapErr(fmt.Errorf("create container %s: %w", containerName, err))
+	}
+
+	logger.Info("About to start container")
+
+	err = StartContainer(ctx, image.client, cID)
+	if err != nil {
+		return nil, image.wrapErr(fmt.Errorf("start container %s: %w", containerName, err))
+	}
+
+	return &Container{
+		Name:        containerName,
+		Hostname:    hostName,
+		log:         logger,
+		image:       image,
+		containerID: cID,
+	}, nil
 }
 
 func (image *Image) createContainer(ctx context.Context, containerName, hostName string, cmd []string, opts ContainerOptions) (string, error) {
@@ -156,12 +192,17 @@ func (image *Image) createContainer(ctx context.Context, containerName, hostName
 		}
 	}
 
+	// only use ENTRYPOINT instead of CMD if specified
+	if len(opts.Entrypoint) != 0 {
+		cmd = []string{}
+	}
+
 	cc, err := image.client.ContainerCreate(
 		ctx,
 		&container.Config{
 			Image: image.imageRef(),
 
-			Entrypoint: []string{},
+			Entrypoint: opts.Entrypoint,
 			Cmd:        cmd,
 
 			Env: opts.Env,
@@ -190,45 +231,23 @@ func (image *Image) createContainer(ctx context.Context, containerName, hostName
 	return cc.ID, nil
 }
 
-// Start pulls the image if not present, creates a container, and runs it.
-func (image *Image) Start(ctx context.Context, cmd []string, opts ContainerOptions) (*Container, error) {
-	if len(cmd) == 0 {
-		panic(errors.New("cmd cannot be empty"))
-	}
+func (image *Image) imageRef() string {
+	return image.repository + ":" + image.tag
+}
 
-	if err := image.ensurePulled(ctx); err != nil {
-		return nil, image.wrapErr(err)
-	}
-
-	var (
-		containerName = SanitizeContainerName(image.testName + "-" + RandLowerCaseLetterString(6))
-		hostName      = CondenseHostName(containerName)
-		logger        = image.log.With(
-			zap.String("command", strings.Join(cmd, " ")),
-			zap.String("hostname", hostName),
-			zap.String("container", containerName),
-		)
-	)
-
-	cID, err := image.createContainer(ctx, containerName, hostName, cmd, opts)
+// ensurePulled can only pull public images.
+func (image *Image) ensurePulled(ctx context.Context) error {
+	ref := image.imageRef()
+	_, _, err := image.client.ImageInspectWithRaw(ctx, ref)
 	if err != nil {
-		return nil, image.wrapErr(fmt.Errorf("create container %s: %w", containerName, err))
+		rc, err := image.client.ImagePull(ctx, ref, types.ImagePullOptions{})
+		if err != nil {
+			return fmt.Errorf("pull image %s: %w", ref, err)
+		}
+		_, _ = io.Copy(io.Discard, rc)
+		_ = rc.Close()
 	}
-
-	logger.Info("About to start container")
-
-	err = StartContainer(ctx, image.client, cID)
-	if err != nil {
-		return nil, image.wrapErr(fmt.Errorf("start container %s: %w", containerName, err))
-	}
-
-	return &Container{
-		Name:        containerName,
-		Hostname:    hostName,
-		log:         logger,
-		image:       image,
-		containerID: cID,
-	}, nil
+	return nil
 }
 
 func (image *Image) wrapErr(err error) error {

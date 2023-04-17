@@ -6,7 +6,7 @@ import (
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	gstypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 )
 
 // SendFundsTx sends funds to a wallet using the SubstrateAPI

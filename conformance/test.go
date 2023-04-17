@@ -14,8 +14,8 @@
 //	import (
 //	  "testing"
 //
-//	  "github.com/strangelove-ventures/ibctest/v5/conformance"
-//	  "github.com/strangelove-ventures/ibctest/v5/ibc"
+//	  "github.com/strangelove-ventures/interchaintest/v5/conformance"
+//	  "github.com/strangelove-ventures/interchaintest/v5/ibc"
 //	)
 //
 //	func TestMyRelayer(t *testing.T) {
@@ -25,7 +25,7 @@
 //	}
 //
 // Although the conformance package is made available as a convenience for other projects,
-// the ibctest project should be considered the canonical definition of tests and configuration.
+// the interchaintest project should be considered the canonical definition of tests and configuration.
 package conformance
 
 import (
@@ -36,14 +36,14 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
-	interchaintest "github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/internal/dockerutil"
-	"github.com/strangelove-ventures/ibctest/v5/label"
-	"github.com/strangelove-ventures/ibctest/v5/relayer"
-	"github.com/strangelove-ventures/ibctest/v5/testreporter"
-	"github.com/strangelove-ventures/ibctest/v5/testutil"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v5/label"
+	"github.com/strangelove-ventures/interchaintest/v5/relayer"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 

@@ -13,7 +13,7 @@ import (
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/go-connections/nat"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 	"go.uber.org/zap"
 )
 
@@ -39,17 +39,28 @@ func (c *ContainerLifecycle) CreateContainer(
 	networkID string,
 	image ibc.DockerImage,
 	ports nat.PortSet,
-	volumeBinds []string,
 	hostName string,
-	cmd []string,
+	volumeBinds,
+	cmd,
+	entrypoint []string,
 ) error {
 	imageRef := image.Ref()
-	c.log.Info(
-		"Will run command",
-		zap.String("image", imageRef),
-		zap.String("container", c.containerName),
-		zap.String("command", strings.Join(cmd, " ")),
-	)
+	if len(entrypoint) != 0 {
+		c.log.Info(
+			"Will run with entrypoint",
+			zap.String("image", imageRef),
+			zap.String("container", c.containerName),
+			zap.String("entrypoint", strings.Join(entrypoint, " ")),
+		)
+		cmd = []string{}
+	} else {
+		c.log.Info(
+			"Will run command",
+			zap.String("image", imageRef),
+			zap.String("container", c.containerName),
+			zap.String("command", strings.Join(cmd, " ")),
+		)
+	}
 
 	pb, listeners, err := GeneratePortBindings(ports)
 	if err != nil {
@@ -63,7 +74,7 @@ func (c *ContainerLifecycle) CreateContainer(
 		&container.Config{
 			Image: imageRef,
 
-			Entrypoint: []string{},
+			Entrypoint: entrypoint,
 			Cmd:        cmd,
 
 			Hostname: hostName,
@@ -144,4 +155,17 @@ func (c *ContainerLifecycle) GetHostPorts(ctx context.Context, portIDs ...string
 		ports[i] = GetHostPort(cjson, p)
 	}
 	return ports, nil
+}
+
+// Running will inspect the container and check its state to determine if it is currently running.
+// If the container is running nil will be returned, otherwise an error is returned.
+func (c *ContainerLifecycle) Running(ctx context.Context) error {
+	cjson, err := c.client.ContainerInspect(ctx, c.id)
+	if err != nil {
+		return err
+	}
+	if cjson.State.Running {
+		return nil
+	}
+	return fmt.Errorf("container with name %s and id %s is not running", c.containerName, c.id)
 }

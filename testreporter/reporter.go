@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/strangelove-ventures/ibctest/v5/label"
+	"github.com/strangelove-ventures/interchaintest/v5/label"
 )
 
 // T is a subset of testing.TB,
@@ -229,7 +229,7 @@ func (r *TestifyReporter) Errorf(format string, args ...any) {
 
 // FailNow passes through to r's TestifyT.
 // It does not need to log another message
-// because r's Reporter should be tracking the testutil already.
+// because r's Reporter should be tracking the test already.
 func (r *TestifyReporter) FailNow() {
 	r.t.FailNow()
 }
@@ -239,8 +239,8 @@ func NewNopReporter() *Reporter {
 	return NewReporter(newNopWriteCloser())
 }
 
-// nopWriteCloser is a no-op io.WriteCloser used to satisfy the ibctest TestReporter type.
-// Because the relayer is used in-process, all logs are simply streamed to the testutil log.
+// nopWriteCloser is a no-op io.WriteCloser used to satisfy the interchaintest TestReporter type.
+// Because the relayer is used in-process, all logs are simply streamed to the test log.
 type nopWriteCloser struct {
 	io.Writer
 }
