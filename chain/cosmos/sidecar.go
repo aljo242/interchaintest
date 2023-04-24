@@ -41,8 +41,6 @@ type SidecarProcess struct {
 	ports        nat.PortSet
 	startCmd     []string
 	entrypoint   []string
-	binds        []string
-	user         []string
 
 	containerLifecycle *dockerutil.ContainerLifecycle
 }
