@@ -1,6 +1,6 @@
 module github.com/strangelove-ventures/interchaintest/v5
 
-go 1.18
+go 1.20
 
 require (
 	github.com/99designs/keyring v1.2.2
@@ -11,12 +11,12 @@ require (
 	github.com/avast/retry-go/v4 v4.3.3
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.12
 	github.com/client9/misspell v0.3.4
-	github.com/cosmos/cosmos-sdk v0.46.11
+	github.com/cosmos/cosmos-sdk v0.46.12
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v5 v5.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/decred/dcrd/dcrec/secp256k1/v2 v2.0.0
-	github.com/docker/docker v20.10.19+incompatible
+	github.com/docker/docker v20.10.24+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/golangci/golangci-lint v1.52.2
